@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class CubicSpline:
     def __init__(self, x, y):
@@ -46,44 +47,38 @@ class CubicSpline:
         return y_eval
 
 # Dados de entrada
-x1 = np.linspace(0, 2*np.pi, 10)
-x2 = np.linspace(0, 2, 10)
-x3 = np.linspace(-1, 1, 10)
-y1 = np.sin(x1)
-y2 = np.cos(x2)
-y3 = np.exp(x3)
+x = np.linspace(0, 2*np.pi, 100)
 
-# Criar splines cúbicos para cada conjunto de dados
-spline1 = CubicSpline(x1, y1)
-spline2 = CubicSpline(x2, y2)
-spline3 = CubicSpline(x3, y3)
+# Definindo os valores de y1, y2 e y3 em função de x
+y1 = np.sin(x)
+y2 = np.cos(x)
+y3 = np.exp(x)
 
-# Gerar novos pontos para plotagem
-x1_new = np.linspace(0, 2*np.pi, 100)
-x2_new = np.linspace(0, 2, 100)
-x3_new = np.linspace(-1, 1, 100)
-y1_new = spline1(x1_new)
-y2_new = spline2(x2_new)
-y3_new = spline3(x3_new)
+# Criando splines cúbicos para cada conjunto de dados
+spline1 = CubicSpline(x, y1)
+spline2 = CubicSpline(x, y2)
+spline3 = CubicSpline(x, y3)
 
-# Expressões estimadas para cada spline
-expression1 = f"y1(x) = {spline1.a[0]:.2f} + {spline1.b[0]:.2f} * (x - {spline1.x[0]:.2f}) + {spline1.c[0]:.2f} * (x - {spline1.x[0]:.2f})^2 + {spline1.d[0]:.2f} * (x - {spline1.x[0]:.2f})^3"
-expression2 = f"y2(x) = {spline2.a[0]:.2f} + {spline2.b[0]:.2f} * (x - {spline2.x[0]:.2f}) + {spline2.c[0]:.2f} * (x - {spline2.x[0]:.2f})^2 + {spline2.d[0]:.2f} * (x - {spline2.x[0]:.2f})^3"
-expression3 = f"y3(x) = {spline3.a[0]:.2f} + {spline3.b[0]:.2f} * (x - {spline3.x[0]:.2f}) + {spline3.c[0]:.2f} * (x - {spline3.x[0]:.2f})^2 + {spline3.d[0]:.2f} * (x - {spline3.x[0]:.2f})^3"
+# Avaliando os splines cúbicos em x
+y1_interp = spline1(x)
+y2_interp = spline2(x)
+y3_interp = spline3(x)
 
-# Plotar os resultados
-plt.figure(figsize=(10, 6))
-plt.plot(x1_new, y1_new, label='Spline para y1(x1)')
-plt.plot(x2_new, y2_new, label='Spline para y2(x2)')
-plt.plot(x3_new, y3_new, label='Spline para y3(x3)')
-plt.scatter(x1, y1, color='red', label='Pontos de y1(x1)')
-plt.scatter(x2, y2, color='blue', label='Pontos de y2(x2)')
-plt.scatter(x3, y3, color='green', label='Pontos de y3(x3)')
+# Configuração da figura 3D
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
 
-# Adicionando as expressões estimadas nos títulos
-plt.title(f'Interpolação por Splines Cúbicos\n{expression1}\n{expression2}\n{expression3}')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.grid(True)
+# Plotando os pontos dos splines cúbicos em 3D com linhas contínuas
+ax.plot(y1_interp, y2_interp, y3_interp, color='b', label='Linha dos Splines Cúbicos')
+
+# Configuração dos eixos
+ax.set_xlabel('X1')
+ax.set_ylabel('X2')
+ax.set_zlabel('X3')
+
+# Adicionando legenda
 plt.legend()
+
+# Exibição do gráfico
+plt.title('Linha dos Splines Cúbicos em 3D')
 plt.show()
