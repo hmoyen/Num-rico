@@ -23,7 +23,7 @@ global division
 
 
 interval = 2*np.pi
-division = 400
+division = 100
 timestep = interval/(division) 
 x_sp = np.linspace(0, interval, division)
 
@@ -109,9 +109,9 @@ def runge_kutta(f, x_0, y_0, h):
     """Three step Runge-Kutta method (RK3)
     Solves first order ODEs
     """
-    k_0 = f(x_0, y_0)
-    k_1 = f(x_0 + h/2, y_0 + h/2 * k_0)
-    k_2 = f(x_0 + h, y_0 - h*k_0 + 2*h*k_1)
+    k_0 = f.calc_func(x_0, y_0)
+    k_1 = f.calc_func(x_0 + h/2, y_0 + h/2 * k_0)
+    k_2 = f.calc_func(x_0 + h, y_0 - h*k_0 + 2*h*k_1)
 
     k = 1/6 * (k_0 + 4.0*k_1 + k_2)
 
@@ -120,60 +120,6 @@ def runge_kutta(f, x_0, y_0, h):
 
     return x_1, k
 
-
-def f1(t, y):
-    """Example first order ordinary differential equation (ODE)"""
-    
-    # Dados de entrada
-    x = x_sp
-
-    y = np.cos(x) # Function
-
-    # Criando splines cúbicos para cada conjunto de dados
-    spline = CubicSpline(x, y)
-    # y3_interp = spline3(x)
-
-    # Avaliando os splines cúbicos em x
-    y_func = spline.calc_func(t,y)
-    # print("Function;",y3_func)
-
-    return y_func
-
-def f2(t, y):
-    """Example first order ordinary differential equation (ODE)"""
-    
-    # Dados de entrada
-    x = x_sp
-
-    y = np.sin(x) # Function
-
-    # Criando splines cúbicos para cada conjunto de dados
-    spline = CubicSpline(x, y)
-    # y3_interp = spline3(x)
-
-    # Avaliando os splines cúbicos em x
-    y_func = spline.calc_func(t,y)
-    # print("Function;",y3_func)
-
-    return y_func
-
-def f3(t, y):
-    """Example first order ordinary differential equation (ODE)"""
-    
-    # Dados de entrada
-    x = x_sp
-
-    y = np.exp(x) # Function
-
-    # Criando splines cúbicos para cada conjunto de dados
-    spline = CubicSpline(x, y)
-    # y3_interp = spline3(x)
-
-    # Avaliando os splines cúbicos em x
-    y_func = spline.calc_func(t,y)
-    # print("Function;",y3_func)
-
-    return y_func
 
 def v_func(values):
 
@@ -259,6 +205,20 @@ def plot_variable(t_values, exact_values, approx_values, variable_name, plot_fun
 
 
 if __name__=="__main__":
+
+    # Function
+
+    y1 = np.cos(x_sp)
+    y2 = np.sin(x_sp)
+    y3 = np.exp(x_sp) 
+    
+
+    # Criando splines cúbicos para cada conjunto de dados
+    spline1 = CubicSpline(x_sp, y1)
+    spline2 = CubicSpline(x_sp, y2)
+    spline3 = CubicSpline(x_sp, y3)
+
+
     # Initial values
     t_0 = 0.0
 
@@ -323,9 +283,9 @@ if __name__=="__main__":
         
         t_last = t
         
-        t, a1 = runge_kutta(f1, t_last, v1, h)
-        t, a2 = runge_kutta(f2, t_last, v2, h)
-        t, a3 = runge_kutta(f3, t_last, v3, h)
+        t, a1 = runge_kutta(spline1, t_last, v1, h)
+        t, a2 = runge_kutta(spline2, t_last, v2, h)
+        t, a3 = runge_kutta(spline3, t_last, v3, h)
 
         x1 = pos_linear_model(x1,v1,a1,h)
         v1 = vel_linear_model(v1,a1,h)
@@ -388,13 +348,13 @@ if __name__=="__main__":
         v3_complete.append(v3)
         x3_complete.append(x3)
 
-    # Plot and analyze each variable
-    # variables = ['x1', 'x2', 'x3', 'v1', 'v2', 'v3']
-    # for variable in variables:
-    #     exact_values = globals()[f'{variable}_exact_values']
-    #     approx_values = globals()[f'{variable}_values']
-    #     func = globals()[f'{variable}_complete']
-    #     plot_variable(t_values, exact_values, approx_values, variable, func, t_complete)
+    #Plot and analyze each variable
+    variables = ['x1', 'x2', 'x3', 'v1', 'v2', 'v3']
+    for variable in variables:
+        exact_values = globals()[f'{variable}_exact_values']
+        approx_values = globals()[f'{variable}_values']
+        func = globals()[f'{variable}_complete']
+        plot_variable(t_values, exact_values, approx_values, variable, func, t_complete)
     
 
     # Definindo os valores de y1, y2 e y3 em função de x
