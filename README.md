@@ -11,8 +11,6 @@ This repository contains code and documentation for processing data from an Iner
   - [Cubic Spline Interpolation](#cubic-spline-interpolation)
 - [Usage](#usage)
 - [Contributing](#contributing)
-- [License](#license)
-
 ## Introduction
 
 The project aims to estimate the state of an object in motion using data collected from an Inertial Measurement Unit (IMU). IMU data typically includes measurements of linear acceleration, angular velocity, and sometimes magnetic field orientation. By processing this data using numerical techniques, we can estimate various parameters such as position, velocity, and orientation of the object.
@@ -37,10 +35,6 @@ Cubic spline interpolation is utilized to approximate the position function base
 
 To use this code, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/your_username/IMU-data-processing.git`
-2. Install the required dependencies (NumPy, SciPy, Matplotlib, etc.): `pip install -r requirements.txt`
+1. Clone the repository
+2. Install the required dependencies (NumPy, SciPy, Matplotlib, etc.): 
 3. Run the main script to process IMU data and estimate the object's state (position): `python3 RK4_splines.py`
-
-## Contributing
-
-Contributions are welcome! If you'd like to contribute to this project, feel free to fork the repository and submit a pull request with your changes.
