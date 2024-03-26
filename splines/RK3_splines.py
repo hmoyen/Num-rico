@@ -14,8 +14,16 @@ global timestep
 global x_sp
 global division
 
-interval = 4*np.pi
-division = 100
+
+# Conversions
+
+# 16Hz --> division = 100, interval = 2 * pi
+# 32Hz --> division = 200, interval = 2 * pi
+# 64Hz --> division = 400, interval = 2 * pi : approximate frequency of Intel Realsense T265 accelerometer
+
+
+interval = 2*np.pi
+division = 400
 timestep = interval/(division) 
 x_sp = np.linspace(0, interval, division)
 
@@ -27,28 +35,48 @@ class CubicSpline:
         self.a, self.b, self.c, self.d = self.compute_coefficients()
 
     def compute_coefficients(self):
+        # Calcula as diferenças entre os pontos adjacentes em x
         h = [self.x[i+1] - self.x[i] for i in range(self.n - 1)]
+        
+        # Inicializa a lista alpha com zeros
         alpha = [0] * self.n
+        
+        # Calcula os valores de alpha conforme a fórmula do pseudocódigo (Numerical Analysis)
         for i in range(1, self.n - 1):
             alpha[i] = 3 * ((self.y[i + 1] - self.y[i]) / h[i] - (self.y[i] - self.y[i - 1]) / h[i - 1])
+        
+        # Inicializa as listas l, mu e z
         l = [1] + [0] * (self.n - 1)
         mu = [0] * self.n
         z = [0] * self.n
+        
+        # Calcula os valores de l, mu e z 
         for i in range(1, self.n - 1):
             l[i] = 2 * (self.x[i + 1] - self.x[i - 1]) - h[i - 1] * mu[i - 1]
             mu[i] = h[i] / l[i]
             z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i]
+        
+        # Define os valores finais de l e z
         l[self.n - 1] = 1
         z[self.n - 1] = 0
+        
+        # Inicializa as listas c, b e d
         c = [0] * self.n
         b = [0] * self.n
         d = [0] * self.n
+        
+        # Calcula os valores de c, b e d 
         for j in range(self.n - 2, -1, -1):
             c[j] = z[j] - mu[j] * c[j + 1]
             b[j] = (self.y[j + 1] - self.y[j]) / h[j] - h[j] * (c[j + 1] + 2 * c[j]) / 3
             d[j] = (c[j + 1] - c[j]) / (3 * h[j])
+        
+        # Define os valores de a como os valores de y, exceto o último ponto
         a = self.y[:-1]
+        
+        # Retorna os coeficientes calculados
         return a, b, c, d
+
     
     def calc_func(self,t,d):
 
@@ -59,11 +87,6 @@ class CubicSpline:
                 idx = i
                 break
         h = t - self.x[idx]
-        # print("H:", h)
-        # print("t:", t)
-        # print("self.x", self.x[idx])
-        # print("Length",len(self.x), "Index", idx)
-        # print("Parameters",self.a[idx], self.b[idx], self.c[idx], self.d[idx])
         y = self.a[idx] + self.b[idx] * h + self.c[idx] * h ** 2 + self.d[idx] * h ** 3
 
         return y
@@ -78,8 +101,6 @@ class CubicSpline:
                     idx = i
                     break
             h = x - self.x[idx]
-            # print("xzinho", self.x[idx])
-            # print("Hzinho", h)
             y = self.a[idx] + self.b[idx] * h + self.c[idx] * h ** 2 + self.d[idx] * h ** 3
             y_eval.append(y)
         return y_eval
@@ -170,21 +191,21 @@ def vel_linear_model(v,a,delta):
 
     return (v+a*delta)
 
-def exact_solution(index, derivative, x):
+def exact_solution(index, x):
 
     #Calculating exact solutions for f1,f2 and f3
 
-    if index == 1 and derivative == 1:
+    if index == 'x1':
         return (-np.cos(x))
-    elif index == 1 and derivative ==2:
+    elif index == 'v1':
         return (np.sin(x))
-    elif index == 2 and derivative == 1:
+    elif index == 'x2':
         return (-np.sin(x))
-    elif index == 2 and derivative ==2:
+    elif index == 'v2':
         return (-np.cos(x))
-    elif index == 3 and derivative ==1:
+    elif index == 'x3':
         return (np.exp(x))
-    elif index == 3 and derivative ==2:
+    elif index == 'v3':
         return (np.exp(x))
 
 def calculate_error(approximate, exact):
@@ -193,9 +214,9 @@ def calculate_error(approximate, exact):
     exact_array = np.array(exact)
     return np.abs(approximate_array - exact_array)
 
-def plot_variable(t_values, exact_values, approx_values, variable_name):
+def plot_variable(t_values, exact_values, approx_values, variable_name, plot_func, t_func):
     # Plot the exact and approximate solutions
-    plt.plot(t_values, exact_values, label=f'Exact Solution for {variable_name}', color='green')
+    plt.plot(t_func, plot_func, label=f'Exact Solution for {variable_name}', color='green')
     plt.plot(t_values, approx_values, label=f'Approximate Solution for {variable_name}', color='red', linestyle=(0,(1,1,3,1)))
     plt.xlabel('time t (in seconds)')
     plt.ylabel(f'{variable_name} (in units)')
@@ -250,7 +271,7 @@ if __name__=="__main__":
     v_0_3 = 1
     x_0_3 = 1
 
-    # Step length 15Hz aproximadamente
+
     h = timestep
     
 
@@ -315,18 +336,18 @@ if __name__=="__main__":
         x3 = pos_linear_model(x3,v3,a3,h)
         v3 = vel_linear_model(v3,a3,h)
 
-        v1_exact = exact_solution(1,2,t)
-        x1_exact = exact_solution(1,1,t)
+        v1_exact = exact_solution('v1',t)
+        x1_exact = exact_solution('x1',t)
         v1_exact_values.append(v1_exact)
         x1_exact_values.append(x1_exact)
 
-        v2_exact = exact_solution(2,2,t)
-        x2_exact = exact_solution(2,1,t)
+        v2_exact = exact_solution('v2',t)
+        x2_exact = exact_solution('x2',t)
         v2_exact_values.append(v2_exact)
         x2_exact_values.append(x2_exact)
 
-        v3_exact = exact_solution(3,2,t)
-        x3_exact = exact_solution(3,1,t)
+        v3_exact = exact_solution('v3',t)
+        x3_exact = exact_solution('x3',t)
         v3_exact_values.append(v3_exact)
         x3_exact_values.append(x3_exact)
         # print(x)
@@ -343,12 +364,37 @@ if __name__=="__main__":
 
         contador = contador + 1
 
+    t_complete = np.linspace(0, interval, 200)
+    x1_complete = []
+    x2_complete = []
+    x3_complete = []
+    v1_complete = []
+    v2_complete = []
+    v3_complete = []
+    
+    for i in t_complete:
+        x1 = exact_solution('x1',i)
+        x2 = exact_solution('x2',i)
+        x3 = exact_solution('x3',i)
+        v1 = exact_solution('v1',i)
+        v2 = exact_solution('v2',i)
+        v3 = exact_solution('v3',i)
+        v1_complete.append(v1)
+        x1_complete.append(x1)
+
+        v2_complete.append(v2)
+        x2_complete.append(x2)
+
+        v3_complete.append(v3)
+        x3_complete.append(x3)
+
     # Plot and analyze each variable
-    variables = ['x1', 'x2', 'x3', 'v1', 'v2', 'v3']
-    for variable in variables:
-        exact_values = globals()[f'{variable}_exact_values']
-        approx_values = globals()[f'{variable}_values']
-        plot_variable(t_values, exact_values, approx_values, variable)
+    # variables = ['x1', 'x2', 'x3', 'v1', 'v2', 'v3']
+    # for variable in variables:
+    #     exact_values = globals()[f'{variable}_exact_values']
+    #     approx_values = globals()[f'{variable}_values']
+    #     func = globals()[f'{variable}_complete']
+    #     plot_variable(t_values, exact_values, approx_values, variable, func, t_complete)
     
 
     # Definindo os valores de y1, y2 e y3 em função de x
@@ -371,8 +417,8 @@ if __name__=="__main__":
     ax = fig.add_subplot(111, projection='3d')
 
     # Plotando os pontos dos splines cúbicos em 3D com linhas contínuas
-    ax.plot(y1_interp, y2_interp, y3_interp, color='b', label='Linha dos Splines Cúbicos')
-    
+    ax.plot(x1_values, x2_values, x3_values, color='b', label='Linha da Trajetória Aproximada')
+    ax.plot(x1_complete, x2_complete, x3_complete, color='r', label='Linha da Trajetória Real')
 
     # Configuração dos eixos
     ax.set_xlabel('X1')
@@ -383,7 +429,7 @@ if __name__=="__main__":
     plt.legend()
 
     # Exibição do gráfico
-    plt.title('Linha dos Splines Cúbicos em 3D')
+    plt.title('Posição Linear')
     plt.show()
 
     
