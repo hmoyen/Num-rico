@@ -3,17 +3,22 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from datetime import datetime
 import matplotlib.pyplot as plt
-from math import exp, sqrt 
+from math import exp, sqrt
 
-__date__ = datetime(2019, 6, 6) # or version string or something
-__author__ = "Joshua Simon"
+import pandas as pd 
 
-"""Four_Step_Runge_Kutta_ODE1.py 
+__date__ = datetime(2024, 3, 24) # or version string or something
+__author__ = "Helena Moyen"
 
-Implementation of the classic fourth-order method also refered as the
-"original" Runge–Kutta method. This method is an implicit four step
-Runge-Kutta method which solves an intial value problem numerically. 
-"""
+global timestep
+global x_sp
+global division
+
+interval = 4*np.pi
+division = 50
+timestep = interval/(division) 
+x_sp = np.linspace(0, interval, division)
+
 class CubicSpline:
     def __init__(self, x, y):
         self.x = x
@@ -54,11 +59,11 @@ class CubicSpline:
                 idx = i
                 break
         h = t - self.x[idx]
-        print("H:", h)
-        print("t:", t)
-        print("self.x", self.x[idx])
-        print("Length",len(self.x), "Index", idx)
-        print("Parameters",self.a[idx], self.b[idx], self.c[idx], self.d[idx])
+        # print("H:", h)
+        # print("t:", t)
+        # print("self.x", self.x[idx])
+        # print("Length",len(self.x), "Index", idx)
+        # print("Parameters",self.a[idx], self.b[idx], self.c[idx], self.d[idx])
         y = self.a[idx] + self.b[idx] * h + self.c[idx] * h ** 2 + self.d[idx] * h ** 3
 
         return y
@@ -73,22 +78,21 @@ class CubicSpline:
                     idx = i
                     break
             h = x - self.x[idx]
-            print("xzinho", self.x[idx])
-            print("Hzinho", h)
+            # print("xzinho", self.x[idx])
+            # print("Hzinho", h)
             y = self.a[idx] + self.b[idx] * h + self.c[idx] * h ** 2 + self.d[idx] * h ** 3
             y_eval.append(y)
         return y_eval
 
 def runge_kutta(f, x_0, y_0, h):
-    """Four step Runge-Kutta method (RK4)
+    """Three step Runge-Kutta method (RK3)
     Solves first order ODEs
     """
     k_0 = f(x_0, y_0)
     k_1 = f(x_0 + h/2, y_0 + h/2 * k_0)
-    k_2 = f(x_0 + h/2, y_0 + h/2 * k_1)
-    k_3 = f(x_0 + h, y_0 + h * k_2)
+    k_2 = f(x_0 + h, y_0 - h*k_0 + 2*h*k_1)
 
-    k = 1/6 * (k_0 + 2.0*k_1 + 2.0*k_2 + k_3)
+    k = 1/6 * (k_0 + 4.0*k_1 + k_2)
 
     x_1 = x_0 + h
     # y_1 = y_0 + h * k
@@ -96,27 +100,63 @@ def runge_kutta(f, x_0, y_0, h):
     return x_1, k
 
 
-def f(t, y):
+def f1(t, y):
     """Example first order ordinary differential equation (ODE)"""
     
     # Dados de entrada
-    x = np.linspace(0, 2*np.pi, 100)
+    x = x_sp
 
-    y3 = np.cos(x)
+    y = np.cos(x) # Function
 
     # Criando splines cúbicos para cada conjunto de dados
-    spline3 = CubicSpline(x, y3)
+    spline = CubicSpline(x, y)
     # y3_interp = spline3(x)
 
     # Avaliando os splines cúbicos em x
-    y3_func = spline3.calc_func(t,y)
-    print("Function;",y3_func)
+    y_func = spline.calc_func(t,y)
+    # print("Function;",y3_func)
 
-    return y3_func
+    return y_func
+
+def f2(t, y):
+    """Example first order ordinary differential equation (ODE)"""
+    
+    # Dados de entrada
+    x = x_sp
+
+    y = np.sin(x) # Function
+
+    # Criando splines cúbicos para cada conjunto de dados
+    spline = CubicSpline(x, y)
+    # y3_interp = spline3(x)
+
+    # Avaliando os splines cúbicos em x
+    y_func = spline.calc_func(t,y)
+    # print("Function;",y3_func)
+
+    return y_func
+
+def f3(t, y):
+    """Example first order ordinary differential equation (ODE)"""
+    
+    # Dados de entrada
+    x = x_sp
+
+    y = np.exp(x) # Function
+
+    # Criando splines cúbicos para cada conjunto de dados
+    spline = CubicSpline(x, y)
+    # y3_interp = spline3(x)
+
+    # Avaliando os splines cúbicos em x
+    y_func = spline.calc_func(t,y)
+    # print("Function;",y3_func)
+
+    return y_func
 
 def v_func(values):
 
-    x = np.linspace(0, 2*np.pi, 100)
+    x = x_sp
     splineV = CubicSpline(x,values)
     # func= splineV.calc_func(t,y)
     return splineV.calc_func()
@@ -130,49 +170,366 @@ def vel_linear_model(v,a,delta):
 
     return (v+a*delta)
 
+def exact_solution(index, derivative, x):
+
+    #Calculating exact solutions for f1,f2 and f3
+
+    if index == 1 and derivative == 1:
+        return (-np.cos(x))
+    elif index == 1 and derivative ==2:
+        return (np.sin(x))
+    elif index == 2 and derivative == 1:
+        return (-np.sin(x))
+    elif index == 2 and derivative ==2:
+        return (-np.cos(x))
+    elif index == 3 and derivative ==1:
+        return (np.exp(x))
+    elif index == 3 and derivative ==2:
+        return (np.exp(x))
+
+def calculate_error(approximate, exact):
+    """Calculate error between approximate and exact solutions"""
+    approximate_array = np.array(approximate)
+    exact_array = np.array(exact)
+    return np.abs(approximate_array - exact_array)
+
 
 if __name__=="__main__":
     # Initial values
     t_0 = 0.0
-    v_0 = 0.0
-    x_0 = -1
+
+    v_0_1 = 0.0
+    x_0_1 = -1
+
+    v_0_2 = -1
+    x_0_2 = 0.0
+
+    v_0_3 = 1
+    x_0_3 = 1
 
     # Step length 15Hz aproximadamente
-    h = 2*np.pi/100 
-
+    h = timestep
+    
 
     t_values = [t_0]
-    v_values = [v_0]
-    x_values = [x_0]
+
+    v1_values = [v_0_1]
+    x1_values = [x_0_1]
+
+    v2_values = [v_0_2]
+    x2_values = [x_0_2]
+
+    v3_values = [v_0_3]
+    x3_values = [x_0_3]
 
     # Calculate solution
     t = t_0
-    v = v_0
-    x = x_0
+
+    v1 = v_0_1
+    x1 = x_0_1
+
+    v2= v_0_2
+    x2 = x_0_2 
+
+    v3 = v_0_3
+    x3 = x_0_3
+
+    #Exact solution
+    v1_exact_values = [v_0_1]
+    x1_exact_values = [x_0_1]
+
+    v2_exact_values = [v_0_2]
+    x2_exact_values = [x_0_2]
+
+    v3_exact_values = [v_0_3]
+    x3_exact_values = [x_0_3]
+
+    v1_exact = v_0_1
+    x1_exact = x_0_1
+
+    v2_exact = v_0_2
+    x2_exact = x_0_2
+
+    v3_exact = v_0_3
+    x3_exact = x_0_3
 
     contador = 0
     
-    for _ in range(100):
+    for _ in range(division):
         
-        t, a = runge_kutta(f, t, v, h)
-        # v_f = v_func(v_values)
-        # t, x, v = runge_kutta(v_f, t, v, h)
-        x = pos_linear_model(x,v,a,h)
-        v = vel_linear_model(v,a,h)
-        print(x)
+        t_last = t
+        
+        t, a1 = runge_kutta(f1, t_last, v1, h)
+        t, a2 = runge_kutta(f2, t_last, v2, h)
+        t, a3 = runge_kutta(f3, t_last, v3, h)
+
+        x1 = pos_linear_model(x1,v1,a1,h)
+        v1 = vel_linear_model(v1,a1,h)
+
+        x2 = pos_linear_model(x2,v2,a2,h)
+        v2 = vel_linear_model(v2,a2,h)
+
+        x3 = pos_linear_model(x3,v3,a3,h)
+        v3 = vel_linear_model(v3,a3,h)
+
+        v1_exact = exact_solution(1,2,t)
+        x1_exact = exact_solution(1,1,t)
+        v1_exact_values.append(v1_exact)
+        x1_exact_values.append(x1_exact)
+
+        v2_exact = exact_solution(2,2,t)
+        x2_exact = exact_solution(2,1,t)
+        v2_exact_values.append(v2_exact)
+        x2_exact_values.append(x2_exact)
+
+        v3_exact = exact_solution(3,2,t)
+        x3_exact = exact_solution(3,1,t)
+        v3_exact_values.append(v3_exact)
+        x3_exact_values.append(x3_exact)
+        # print(x)
         t_values.append(t)
-        v_values.append(v)
-        x_values.append(x)
-        print(t, v)
+        v1_values.append(v1)
+        x1_values.append(x1)
+
+        v2_values.append(v2)
+        x2_values.append(x2)
+
+        v3_values.append(v3)
+        x3_values.append(x3)
+        # print(t, v)
 
         contador = contador + 1
 
-    # Plot solution
-    plt.plot(t_values, x_values) # Gráfico da posição 
+    # Plot the exact and approximate solutions for v1
+    plt.plot(t_values, v1_exact_values, label='Exact Solution for v1', color='green')
+    plt.plot(t_values, v1_values, label='Approximate Solution for v1', color='red', linestyle=(0,(1,1,3,1)))
+    plt.xlabel('time t (in seconds)')
+    plt.ylabel('velocity v1 (in m/s)')
+    plt.title('Numerical Approximation of State Variable Velocity (v1)')
+    plt.legend()
     plt.show()
 
-        # Dados de entrada
-    x_sp = np.linspace(0, 2*np.pi, 100)
+    # Calculate the error for v1
+    error_v1 = calculate_error(v1_exact_values, v1_values)
+
+    # Create DataFrame for error
+    error_v1_df = pd.DataFrame({
+        't': t_values,
+        'Exact Solution': v1_exact_values,
+        'Approximate Solution (Runge-Kutta)': v1_values,
+        'e': error_v1
+    })
+
+    # Slice the DataFrame to select only 10 rows in the middle of the interval
+    start_index = len(t_values) // 2 - 5
+    end_index = len(t_values) // 2 + 5
+    error_v1_df_slice = error_v1_df.iloc[start_index:end_index]
+
+    # Convert DataFrame to LaTeX table format
+    latex_table_v1 = error_v1_df_slice.to_latex(index=False)
+    print("v1 global error")
+    print(latex_table_v1)
+
+    # Display the sliced table in a figure
+    plt.figure(figsize=(10, 6))
+    table_v1 = plt.table(cellText=error_v1_df_slice.values,
+                        colLabels=error_v1_df_slice.columns,
+                        cellLoc='center',
+                        loc='center')
+    table_v1.auto_set_font_size(False)
+    table_v1.set_fontsize(10)
+    table_v1.scale(1.2, 1.2)
+    plt.axis('off')
+    plt.show()
+
+
+    # Plot the exact and approximate solutions for v1
+    plt.plot(t_values, v2_exact_values, label='Exact Solution for v2', color='green')
+    plt.plot(t_values, v2_values, label='Approximate Solution for v2', color='red', linestyle=(0,(1,1,3,1)))
+    plt.xlabel('time t (in seconds)')
+    plt.ylabel('velocity v2 (in m/s)')
+    plt.title('Numerical Approximation of State Variable Velocity (v2)')
+    plt.legend()
+    plt.show()
+
+    # Calculate the error for v1
+    error_v2 = calculate_error(v1_exact_values, v1_values)
+
+    # Create DataFrame for error
+    error_v2_df = pd.DataFrame({
+        't': t_values,
+        'Exact Solution': v2_exact_values,
+        'Approximate Solution (Runge-Kutta)': v2_values,
+        'e': error_v2
+    })
+
+    error_v2_df_slice = error_v2_df.iloc[start_index:end_index]
+
+    # Convert DataFrame to LaTeX table format
+    latex_table_v2 = error_v2_df_slice.to_latex(index=False)
+    print("v2 global error")
+    print(latex_table_v2)
+
+    # Display the sliced table in a figure
+    plt.figure(figsize=(10, 6))
+    table_v2 = plt.table(cellText=error_v2_df_slice.values,
+                        colLabels=error_v2_df_slice.columns,
+                        cellLoc='center',
+                        loc='center')
+    table_v2.auto_set_font_size(False)
+    table_v2.set_fontsize(10)
+    table_v2.scale(1.2, 1.2)
+    plt.axis('off')
+    plt.show()
+
+
+    # Plot the exact and approximate solutions for v1
+    plt.plot(t_values, v3_exact_values, label='Exact Solution for v3', color='green')
+    plt.plot(t_values, v3_values, label='Approximate Solution for v3', color='red', linestyle=(0,(1,1,3,1)))
+    plt.xlabel('time t (in seconds)')
+    plt.ylabel('velocity v3 (in m/s)')
+    plt.title('Numerical Approximation of State Variable Velocity (v3)')
+    plt.legend()
+    plt.show()
+
+    # Calculate the error for v1
+    error_v3 = calculate_error(v3_exact_values, v3_values)
+
+    # Create DataFrame for error
+    error_v3_df = pd.DataFrame({
+        't': t_values,
+        'Exact Solution': v3_exact_values,
+        'Approximate Solution (Runge-Kutta)': v3_values,
+        'e': error_v3
+    })
+
+    error_v3_df_slice = error_v3_df.iloc[start_index:end_index]
+
+    # Convert DataFrame to LaTeX table format
+    latex_table_v3 = error_v3_df_slice.to_latex(index=False)
+    print("v3 global error")
+    print(latex_table_v3)
+
+    # Display the sliced table in a figure
+    plt.figure(figsize=(10, 6))
+    table_v3 = plt.table(cellText=error_v3_df_slice.values,
+                        colLabels=error_v3_df_slice.columns,
+                        cellLoc='center',
+                        loc='center')
+    table_v3.auto_set_font_size(False)
+    table_v3.set_fontsize(10)
+    table_v3.scale(1.2, 1.2)
+    plt.axis('off')
+    plt.show()
+
+
+    plt.plot(t_values, x1_exact_values, label='Exact Solution for x1', color='blue')
+    plt.plot(t_values, x1_values, label='Approximate Solution for x1', color='red', linestyle=(0,(1,1,3,1)))
+    plt.xlabel('time t (in seconds)')
+    plt.ylabel('position x1 (in meters)')
+    plt.title('Numerical Approximation of State Variable Position (x1)')
+    plt.show()
+
+    error1 = calculate_error(x1_exact_values, x1_values)
+
+    plt.plot(t_values, x2_exact_values, label='Exact Solution for x2', color='green')
+    plt.plot(t_values, x2_values, label='Approximate Solution for x2', color='red', linestyle=(0,(1,1,3,1)))
+    plt.xlabel('time t (in seconds)')
+    plt.ylabel('position x2 (in meters)')
+    plt.title('Numerical Approximation of State Variable Position (x2)')
+    plt.show()
+
+    error2 = calculate_error(x2_exact_values, x2_values)
+
+    plt.plot(t_values, x3_exact_values, label='Exact Solution for x3', color='green')
+    plt.plot(t_values, x3_values, label='Approximate Solution for x3', color='red', linestyle=(0,(1,1,3,1)))
+    plt.xlabel('time t (in seconds)')
+    plt.ylabel('position x3 (in meters)')
+    plt.title('Numerical Approximation of State Variable Position (x3)')
+    plt.show()
+
+    error3 = calculate_error(x3_exact_values, x3_values)
+
+    # Create DataFrame for error
+    error_df1 = pd.DataFrame({
+        't': t_values,
+        'Exact Solution': x1_exact_values,
+        'Approximate Solution (Runge-Kutta)': x1_values,
+        'e': error1
+    })
+
+    # Create DataFrame for error
+    error_df2 = pd.DataFrame({
+        't': t_values,
+        'Exact Solution': x2_exact_values,
+        'Approximate Solution (Runge-Kutta)': x2_values,
+        'e': error2
+    })
+
+    # Create DataFrame for error
+    error_df3 = pd.DataFrame({
+        't': t_values,
+        'Exact Solution': x3_exact_values,
+        'Approximate Solution (Runge-Kutta)': x3_values,
+        'e': error3
+    })
+
+    # Slice the DataFrame to select only 10 rows in the middle of the interval
+    start_index = len(t_values) // 2 - 5
+    end_index = len(t_values) // 2 + 5
+    error1_df_slice = error_df1.iloc[start_index:end_index]
+    error2_df_slice = error_df2.iloc[start_index:end_index]
+    error3_df_slice = error_df3.iloc[start_index:end_index]
+
+
+    # Convert DataFrame to LaTeX table format
+    latex_table = error1_df_slice.to_latex(index=False)
+    print("X1 global error")
+    print(latex_table)
+    # Display the sliced table in a figure
+    plt.figure(figsize=(10, 6))
+    table = plt.table(cellText=error1_df_slice.values,
+                      colLabels=error1_df_slice.columns,
+                      cellLoc='center',
+                      loc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 1.2)
+    plt.axis('off')
+    plt.show()
+
+    # Convert DataFrame to LaTeX table format
+    latex_table = error2_df_slice.to_latex(index=False)
+    print("X2 global error")
+    print(latex_table)
+    # Display the sliced table in a figure
+    plt.figure(figsize=(10, 6))
+    table = plt.table(cellText=error2_df_slice.values,
+                      colLabels=error2_df_slice.columns,
+                      cellLoc='center',
+                      loc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 1.2)
+    plt.axis('off')
+    plt.show()
+
+    # Convert DataFrame to LaTeX table format
+    latex_table = error3_df_slice.to_latex(index=False)
+    print("X3 global error")
+    print(latex_table)
+    # Display the sliced table in a figure
+    plt.figure(figsize=(10, 6))
+    table = plt.table(cellText=error3_df_slice.values,
+                      colLabels=error3_df_slice.columns,
+                      cellLoc='center',
+                      loc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 1.2)
+    plt.axis('off')
+    plt.show()
+    
 
     # Definindo os valores de y1, y2 e y3 em função de x
     y1 = np.sin(x_sp)
