@@ -1,6 +1,6 @@
 # Inertial Measurement Unit (IMU) Data Processing
 
-This repository contains code and documentation for processing data from an Inertial Measurement Unit (IMU) sensor to estimate the state of a moving object. The project utilizes numerical techniques such as numerical integration, Runge-Kutta method, numerical quadrature, and cubic spline interpolation to estimate the position, velocity, and orientation of the object based on IMU data.
+This repository contains code and documentation for processing data from an Inertial Measurement Unit (IMU) sensor to estimate the state of a moving object. The project utilizes numerical techniques such as numerical integration, Runge-Kutta method, numerical quadrature, and cubic spline interpolation to estimate the position, velocity, and orientation of the object based on IMU data. It is a simplified model, we didn't include noise yet.
 
 ## Table of Contents
 
