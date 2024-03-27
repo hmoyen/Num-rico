@@ -9,6 +9,7 @@ This repository contains code and documentation for processing data from an Iner
   - [Runge-Kutta](#runge-kutta)
   - [Numerical Quadrature](#numerical-quadrature)
   - [Cubic Spline Interpolation](#cubic-spline-interpolation)
+- [Documentation](#documentation)
 
 ## Introduction
 
@@ -30,3 +31,6 @@ Numerical quadrature is applied to approximate the integral of angular velocity 
 
 Cubic spline interpolation is utilized to approximate the position function based on the estimated positions obtained from the Runge-Kutta method. This interpolation technique provides a continuous representation of the object's trajectory, allowing for smoother visualization and analysis.
 
+## Documentation
+
+The documentation in progress is here to view: [Latex](https://www.overleaf.com/read/hdydpzpthtvc#f6f1d5)
