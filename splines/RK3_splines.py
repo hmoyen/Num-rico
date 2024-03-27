@@ -17,13 +17,14 @@ global division
 
 # Conversions
 
+# 5,3 Hz --> division = 50, interval = 3 * pi
 # 16Hz --> division = 100, interval = 2 * pi
 # 32Hz --> division = 200, interval = 2 * pi
 # 64Hz --> division = 400, interval = 2 * pi : approximate frequency of Intel Realsense T265 accelerometer
 
 
-interval = 2*np.pi
-division = 100
+interval =  np.pi
+division = 512
 timestep = interval/(division) 
 x_sp = np.linspace(0, interval, division)
 
@@ -116,20 +117,16 @@ def runge_kutta(f, x_0, y_0, h):
     k = 1/6 * (k_0 + 4.0*k_1 + k_2)
 
     x_1 = x_0 + h
-    # y_1 = y_0 + h * k
 
     return x_1, k
 
 
-def v_func(values):
-
-    x = x_sp
-    splineV = CubicSpline(x,values)
-    # func= splineV.calc_func(t,y)
-    return splineV.calc_func()
-
-
 def pos_linear_model(p,v,a,delta):
+
+    # p -> posição anterior
+    # v --> velocidade estimada com runge kutta
+    # a --> medida ponderada das acelerações dado por runge kutta
+    # delta --> tempo
 
     return (p+v*delta+(a*delta**2)*0.5)
 
@@ -172,6 +169,11 @@ def plot_variable(t_values, exact_values, approx_values, variable_name, plot_fun
 
     # Calculate the error
     error = calculate_error(exact_values, approx_values)
+    print("Approx solution", approx_values[int(division/2)])
+    print("Time solution", t_values[int(division/2)])
+    print("Error", error[int(division/2)])
+    print("h", timestep)
+    print("n", division)
 
     # Create DataFrame for error
     error_df = pd.DataFrame({
@@ -189,7 +191,7 @@ def plot_variable(t_values, exact_values, approx_values, variable_name, plot_fun
     # Convert DataFrame to LaTeX table format
     latex_table = error_df_slice.to_latex(index=False)
     print(f"{variable_name} global error")
-    print(latex_table)
+    # print(latex_table)
 
     # Display the sliced table in a figure
     plt.figure(figsize=(10, 6))
@@ -356,21 +358,6 @@ if __name__=="__main__":
         func = globals()[f'{variable}_complete']
         plot_variable(t_values, exact_values, approx_values, variable, func, t_complete)
     
-
-    # Definindo os valores de y1, y2 e y3 em função de x
-    y1 = np.sin(x_sp)
-    y2 = np.cos(x_sp)
-    y3 = np.exp(x_sp)
-
-    # Criando splines cúbicos para cada conjunto de dados
-    spline1 = CubicSpline(x_sp, y1)
-    spline2 = CubicSpline(x_sp, y2)
-    spline3 = CubicSpline(x_sp, y3)
-
-    # Avaliando os splines cúbicos em x
-    y1_interp = spline1(x_sp)
-    y2_interp = spline2(x_sp)
-    y3_interp = spline3(x_sp)
 
     # Configuração da figura 3D
     fig = plt.figure(figsize=(10, 8))
